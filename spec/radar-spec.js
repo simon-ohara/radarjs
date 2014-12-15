@@ -6,8 +6,12 @@ describe("Radar", function() {
     expect(subject.constructor.name).toBe('Radar');
   });
 
-  xit("has a store property", function() {
-    expect(subject.store).toBeDefined();
+  it("has a storeController property", function() {
+    expect(subject.storeController).toBeDefined();
+  });
+
+  it("has models", function() {
+    expect(subject.models).toBeDefined();
   });
 
   // it("has a geometries property", function() {

@@ -1,6 +1,4 @@
-(function(root, R) {
-  root.Radar = R.call( root );  
-})(this, function() {
+(function( _global ) {
   'use strict';
   // world / display
   // behaviors
@@ -13,34 +11,52 @@
   // this.geometries = new RadarGeometries();
   // this.receiver = new WebSocket( options.url );
 
-  var window = this, 
-      document = window.document,
-      physics = window.Physics,
-      _internal = {
-        modules: {},
-        services: {},
-        display: {}
-      };
+  var // Internal package variable declarations
+  
+  // The root of this package
+  _root = {
+
+    // Models to be used
+    models: {},
+
+    // The data store
+    store: {},
+
+    // Modules to be used in this package
+    modules: {}
+  },
+
+  // The DOM this package has access to
+  _dom = _global.document,
+
+  // The PhysicsJS reference
+  physics = _global.Physics;
+
+// _internal = {
+//   modules: {},
+//   services: {},
+//   display: {}
+// };
 
 
   function Radar() {
     var element = document.createElement('canvas');
     element.id = 'RadarScreen';
 
-    this.screen = {
-      element: element,
-      name: element.id,
-      width: window.innerWidth,
-      height: window.innerHeight
-    };
+    this.models = _root.models;
+
+    // this.screen = {
+    //   element: element,
+    //   name: element.id,
+    //   width: window.innerWidth,
+    //   height: window.innerHeight
+    // };
 
 
-    _internal.radar = this;
+    // _internal.radar = this;
 
-    initializeServices.call(this);
+    // initializeServices.call(this);
     initializeModules.call(this);
-
-    console.log( this.services.display );
   }
 
   // Radar.prototype.physicsEngine = Physics;
@@ -51,17 +67,9 @@
   <%= content %>
 
   function initializeModules() {
-    for( var module in _internal.modules ) {
-
-      if( module === 'store' ) {
-        this[ module ] = _internal.modules[ module ].call(this);
-      } else {
-        this[ module ] = new _internal.modules[ module ](this);
-      }
-
-      if( module === 'display' ) {
-        _internal.display.instance = this[ module ];
-      }
+    var module, modules = _root.modules; 
+    for( module in modules ) {
+      this[ module ] = modules[ module ].call(this);
     }
   }
 
@@ -73,6 +81,7 @@
     }
   }
 
-  return Radar;
+  // Export the Radar package
+  _global.Radar = Radar;
 
-});
+})( this );

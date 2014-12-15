@@ -5,17 +5,27 @@ module.exports = (grunt) ->
     content: 'src/_content'
     final: 'dist/<%= pkg.name %>-<%= pkg.version %>.js'
     files: [
-      'src/lib/store.js'
-      'src/lib/geometries.js'
+      # Models
+      'src/lib/models/group.js'
+      'src/lib/models/member.js'
 
-      'src/lib/services/display.js'
+      # Services
+      'src/lib/services/group-model.js'
+      'src/lib/services/member-model.js'
+
+      # Controllers
+      'src/lib/controllers/store.js'
+      # 'src/lib/store.js'
+      # 'src/lib/geometries.js'
+
+      # 'src/lib/services/display.js'
 
       # The display object and its dependencies
-      'src/lib/display/renderer.js'
-      'src/lib/display/behaviors.js'
-      'src/lib/display/behaviors/member.js'
-      'src/lib/display/behaviors/group.js'
-      'src/lib/display.js'
+      # 'src/lib/display/renderer.js'
+      # 'src/lib/display/behaviors.js'
+      # 'src/lib/display/behaviors/member.js'
+      # 'src/lib/display/behaviors/group.js'
+      # 'src/lib/display.js'
     ]
 
   wrapContent = (src, filepath) ->
