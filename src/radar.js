@@ -20,10 +20,18 @@
     models: {},
 
     // The data store
-    store: {},
+    stores: {},
 
     // Modules to be used in this package
-    modules: {}
+    modules: {},
+
+    // Code concerned with display only
+    display: {
+      behaviors: [],
+      bodies: {},
+      // Modules to be used only for the display
+      modules: {}
+    }
   },
 
   // The DOM this package has access to
@@ -40,20 +48,7 @@
 
 
   function Radar() {
-    var element = document.createElement('canvas');
-    element.id = 'RadarScreen';
-
     this.models = _root.models;
-
-    // this.screen = {
-    //   element: element,
-    //   name: element.id,
-    //   width: window.innerWidth,
-    //   height: window.innerHeight
-    // };
-
-
-    // _internal.radar = this;
 
     // initializeServices.call(this);
     initializeModules.call(this);

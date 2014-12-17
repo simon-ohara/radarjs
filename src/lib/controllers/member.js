@@ -1,25 +1,36 @@
 (function() {
 
-  var store = _root.store,
-      Member = _root.models.member;
+  var Member = _root.models.member,
+      MemberBody = _root.display.bodies.member;
 
-  function MemberModelService() {
+  function MemberController() {
+    var display = this.display;
+
+    function addBody( memberId ) {
+      var body = new MemberBody( memberId );
+
+      display.addBody( body );
+
+      return body; 
+    }
+
     return {
 
       create: function( memberId, group ) {
         var newMember = new Member( memberId, group.id );
+        newMember.body = addBody( memberId );
+
         group.members.push( newMember );
 
         return newMember;
       },
 
       read: function( memberId, group ) {
-        var idx, radar = this,
+        var idx, member,
             members = group.members,
-            totalMembers = members.length,
-            member = undefined;
+            totalMembers = members.length;
 
-        if( memberId && members.length ) {
+        if( memberId && totalMembers ) {
           for( idx=0; idx<totalMembers; idx++ ) {
             if( members[ idx ].id === memberId ) {
               member = members[ idx ];
@@ -34,7 +45,7 @@
       update: function( member, stateData ) {
         for(var prop in stateData) {
           if( stateData.hasOwnProperty( prop ) ) {
-            member[ prop ] = stateData[ prop ];
+            member.state[ prop ] = stateData[ prop ];
           }
         }
 
@@ -45,6 +56,6 @@
     };
   }
 
-  _root.modules.memberModelService = MemberModelService;
+  _root.modules.memberController = MemberController;
 
 })();

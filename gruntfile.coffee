@@ -9,23 +9,28 @@ module.exports = (grunt) ->
       'src/lib/models/group.js'
       'src/lib/models/member.js'
 
-      # Services
-      'src/lib/services/group-model.js'
-      'src/lib/services/member-model.js'
+      # Store
+      'src/lib/store.js'
 
-      # Controllers
+      # Display
+      'src/lib/display/screen.js'
+      'src/lib/display/renderer.js'
+
+      'src/lib/display/bodies/base.js'
+      'src/lib/display/bodies/group.js'
+      'src/lib/display/bodies/member.js'
+      'src/lib/display/bodies.js'
+      # 'src/lib/display/behaviors/member.js'
+      'src/lib/display/behaviors/group.js'
+      'src/lib/display.js'
+
+      # Services
+      'src/lib/controllers/group.js'
+      'src/lib/controllers/member.js'
       'src/lib/controllers/store.js'
-      # 'src/lib/store.js'
-      # 'src/lib/geometries.js'
 
       # 'src/lib/services/display.js'
 
-      # The display object and its dependencies
-      # 'src/lib/display/renderer.js'
-      # 'src/lib/display/behaviors.js'
-      # 'src/lib/display/behaviors/member.js'
-      # 'src/lib/display/behaviors/group.js'
-      # 'src/lib/display.js'
     ]
 
   wrapContent = (src, filepath) ->

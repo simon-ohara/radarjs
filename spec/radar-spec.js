@@ -14,6 +14,11 @@ describe("Radar", function() {
     expect(subject.models).toBeDefined();
   });
 
+  it("has a store property", function() {
+    expect(typeof subject.store).toBe('string');
+    expect(subject.store).toMatch('store-');
+  });
+
   // it("has a geometries property", function() {
   //   expect(subject.geometries).toBeDefined();
   // });

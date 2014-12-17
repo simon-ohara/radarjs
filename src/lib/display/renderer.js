@@ -1,5 +1,7 @@
-(function( _internal ) {
-  _internal.display.renderer = function( screen ) {
+(function() {
+  function DisplayRenderer() {
+    var screen = this.screen;
+
     var thisConfig = {
       el: screen.name,
       width: screen.width,
@@ -9,4 +11,6 @@
 
     return physics.renderer( 'canvas', thisConfig );
   };
-}( _internal ));
+
+  _root.display.modules.renderer = DisplayRenderer;
+})();

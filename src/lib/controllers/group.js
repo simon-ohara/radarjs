@@ -1,25 +1,37 @@
 (function() {
 
-  var store = _root.store,
-      Group = _root.models.group;
+  var Group = _root.models.group,
+      GroupBody = _root.display.bodies.group;
 
-  function GroupModelService() {
+  function GroupController() {
+    var store = _root.stores[ this.store ],
+        display = this.display;
+
+    function addBody( groupId ) {
+      var body = new GroupBody( groupId );
+
+      display.addBody( body );
+
+      return body; 
+    }
+
     return {
 
       create: function( groupId ) {
         var newGroup = new Group( groupId );
+        newGroup.body = addBody( groupId );
+
         store.groups.push( newGroup );
 
         return newGroup;
       },
 
       read: function( groupId ) {
-        var idx, radar = this,
+        var idx, group,
             groups = store.groups,
-            totalGroups = groups.length,
-            group = undefined;
+            totalGroups = groups.length;
 
-        if( groupId ) {
+        if( groupId && totalGroups ) {
           for( idx=0; idx<totalGroups; idx++ ) {
             if( groups[ idx ].id === groupId ) {
               group = groups[ idx ];
@@ -37,6 +49,6 @@
     };
   }
 
-  _root.modules.groupModelService = GroupModelService;
+  _root.modules.groupController = GroupController;
 
 })();

@@ -1,10 +1,10 @@
-xdescribe("RadarDisplay", function() {
+describe("RadarDisplay", function() {
   var radar = new Radar(),
       subject = radar.display;
 
-  it("is the Physics.world instance", function() {
+  it("inherits the Physics.world instance", function() {
     // this can be confirmed by checking there is a circular reference in the integrator
-    expect(subject._integrator._world).toEqual(subject);
+    expect(subject._integrator._world).toEqual(subject.__proto__);
   });
 
   describe("its renderer", function() {

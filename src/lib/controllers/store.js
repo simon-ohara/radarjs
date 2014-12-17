@@ -1,17 +1,16 @@
 (function() {
 
-  var store = _root.store;
-
   // A controller to manage data in the private root store object
   //
   // methods: add, get, set, remove
   //
   function StoreController() {
     var radar = this,
-        grp = radar.groupModelService,
-        mbr = radar.memberModelService;
+        store = _root.stores[ radar.store ],
+        grp = radar.groupController,
+        mbr = radar.memberController;
 
-    store.groups = [];
+    store.groups = store.groups || [];
 
     function add() {
       var id = arguments[0],

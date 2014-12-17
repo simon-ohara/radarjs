@@ -1,4 +1,4 @@
-(function( _internal ) {
+(function() {
 
   var attractors  = {
         global: physics.behavior('attractor', {
@@ -16,17 +16,17 @@
         // physics.behavior('interactive-custom', { el: radar.canvas })
       ];
 
-  function addGroup( groupData ) {
-    // create a new group entity
-    var group = new _internal.geometries.groupBody( groupData.uid );
+  // function addGroup( groupData ) {
+  //   // create a new group entity
+  //   var group = new _internal.geometries.groupBody( groupData.uid );
 
-    // save a reference to the store
-    groupData.body = group;
+  //   // save a reference to the store
+  //   groupData.body = group;
 
-    // update the radar
-    this.display.add( group );
-    this.display.emit('display:group:added', groupData.uid);
-  }
+  //   // update the radar
+  //   this.display.add( group );
+  //   this.display.emit('display:group:added', groupData.uid);
+  // }
 
   function behaviorMethods( parent ) {
     return {
@@ -36,7 +36,7 @@
       },
       connect: function( world ) {
         this.display = world;
-        world.on('store:group:added', addGroup, this);
+        // world.on('store:group:added', addGroup, this);
         // world.on('store:group:added', this.testing, this);
         // world.on('store:group:added', function() {
         //   console.log("in here"); 
@@ -163,13 +163,13 @@
     };
   }
 
-  function GroupBehavior( display ) {
+  function GroupBehavior() {
     // Register new behavior with the physics engine
     physics.behavior( 'group', behaviorMethods );
 
-    display.addBehavior(  physics.behavior( 'group' ) );
+    _root.display.behaviors.push( physics.behavior( 'group' ) );
   }
 
-  _internal.display.behaviors.register( GroupBehavior );
+  _root.display.modules.groupBehavior = GroupBehavior;
 
-}( _internal ));
+})();

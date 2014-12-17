@@ -1,55 +1,21 @@
 describe('StoreController', function() {
   var radar = new Radar(),
       subject = radar.storeController,
-      exampleData = {
-        member: "38df4002e7aa7295ae3027b04dd8864a_oneapp_1",
-        group: "38df4002e7aa7295ae3027b04dd8864a",
-        state: {
-          status: "waiting"
-        }
-      };
+      exampleData = DATA.foo.members[0];
 
   describe("#update", function() {
-    var newGroupData = {
-          member: "FooMember",
-          group: "FooGroup",
-          state: {}
-        },
-        newMemberData = {
-          member: "BarMember",
-          group: newGroupData.group,
-          state: {}
-        };
+    var newGroupData = DATA.bar.members[0],
+        newMemberData = DATA.bar.members[1];
 
     it("is defined", function() {
       expect(subject.update).toBeDefined();
     });
 
-    it("returns the updated member object from the store", function() {
+    it("always returns the updated member object from the store", function() {
       var updatedGroupMember = subject.update( exampleData );
 
       expect( updatedGroupMember.id ).toEqual( exampleData.member );
       expect( updatedGroupMember.group ).toEqual( exampleData.group );
-    });
-
-    it("creates the group if it does not exist", function() {
-      // Group does not exist
-      expect( subject.get( newGroupData.group ) ).not.toBeDefined();
-      // After updating
-      subject.update( newGroupData );
-      // Group does exist
-      expect( subject.get( newGroupData.group ) ).toBeDefined();
-    });
-
-    it("creates the member if it does not exist", function() {
-      // Group exists
-      expect( subject.get( newMemberData.group ) ).toBeDefined();
-      // Member does not exist
-      expect( subject.get( newMemberData.member, newMemberData.group ) ).not.toBeDefined();
-      // After updating the group
-      subject.update( newMemberData );
-      // The Member now exists
-      expect( subject.get( newMemberData.member, newMemberData.group ) ).toBeDefined();
     });
 
     describe("argument validation", function() {
@@ -106,6 +72,13 @@ describe('StoreController', function() {
     describe("members", function() {
       it("returns a member object when passed two strings as arguments", function() {
         var retrievedMember = subject.get( exampleData.member, exampleData.group );
+
+        expect( retrievedMember.id ).toBe( exampleData.member );
+      });
+
+      it("returns a member object when passed a string and a group object as arguments", function() {
+        var groupObject = subject.get( exampleData.group ),
+            retrievedMember = subject.get( exampleData.member, groupObject );
 
         expect( retrievedMember.id ).toBe( exampleData.member );
       });
