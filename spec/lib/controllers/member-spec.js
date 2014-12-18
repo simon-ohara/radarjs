@@ -74,7 +74,7 @@ describe("MemberController", function() {
   });
 
   describe("#update", function() {
-    var radar, store, subject, data, groups, member, memberData, newState;
+    var radar, store, subject, data, groups, member, memberData, newState, oldState;
 
     beforeEach( function() {
       radar = new Radar();
@@ -107,6 +107,15 @@ describe("MemberController", function() {
 
       expect( member.state.foo ).toEqual( newState.a );
       expect( member.state.bar ).toEqual( newState.b );
+    });
+    
+    it("triggers a life-cycle hook", function() {
+      spyOn( radar.on, 'memberChangeState' );
+      member = subject.create( memberData.member, data.group );
+      oldState = member.state;
+      subject.update( member, { foo: newState.a } );
+
+      expect( radar.on.memberChangeState ).toHaveBeenCalledWith( member, oldState );
     });
   });
 

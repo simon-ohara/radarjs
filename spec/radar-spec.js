@@ -27,6 +27,16 @@ describe("Radar", function() {
     expect(subject.display).toBeDefined();
   });
 
+  it("has an on property", function() {
+    expect(subject.on).toBeDefined();
+  });
+
+  describe("#on", function() {
+    it("has a memberChangeState hook", function() {
+      expect( subject.on.memberChangeState ).toBeDefined();
+    });
+  });
+
   xdescribe("#screen", function() {
     it("is an object", function() {
       expect(typeof subject.screen).toBe('object');

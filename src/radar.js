@@ -25,6 +25,9 @@
     // Modules to be used in this package
     modules: {},
 
+    // Life-cycle Hooks
+    hooks: {},
+
     // Code concerned with display only
     display: {
       behaviors: [],

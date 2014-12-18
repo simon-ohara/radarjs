@@ -5,9 +5,12 @@ module.exports = (grunt) ->
     content: 'src/_content'
     final: 'dist/<%= pkg.name %>-<%= pkg.version %>.js'
     files: [
+      # Hooks
+      'src/lib/hooks/*.js'
+      'src/lib/hooks.js'
+
       # Models
-      'src/lib/models/group.js'
-      'src/lib/models/member.js'
+      'src/lib/models/*.js'
 
       # Store
       'src/lib/store.js'

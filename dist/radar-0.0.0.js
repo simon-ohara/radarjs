@@ -25,6 +25,9 @@
     // Modules to be used in this package
     modules: {},
 
+    // Life-cycle Hooks
+    hooks: {},
+
     // Code concerned with display only
     display: {
       behaviors: [],
@@ -60,6 +63,28 @@
   };
 
   (function() {
+  function memberChangeState() {
+
+  }
+
+  _root.hooks.memberChangeState = memberChangeState;
+
+})();
+;(function() {
+  function RadarHooks() {
+    var h, hooks = _root.hooks,
+        radarHooks = {};
+
+    for( h in hooks ) {
+      radarHooks[ h ] = hooks[ h ];
+    }
+
+    return radarHooks;
+  }
+
+  _root.modules.on = RadarHooks;
+})();
+;(function() {
   // The model representing group objects
   //
   // can be instantiated in the following ways
@@ -442,9 +467,10 @@
       MemberBody = _root.display.bodies.member;
 
   function MemberController() {
-    var store = _root.stores[ this.store ],
-        display = this.display,
-        groupController = this.groupController;
+    var radar = this,
+        store = _root.stores[ radar.store ],
+        display = radar.display,
+        groupController = radar.groupController;
 
     store.members = {};
 
@@ -473,11 +499,16 @@
       },
 
       update: function( member, stateData ) {
-        for(var prop in stateData) {
+        var prop, oldState = member.state;
+
+        for(prop in stateData) {
           if( stateData.hasOwnProperty( prop ) ) {
             member.state[ prop ] = stateData[ prop ];
           }
         }
+
+        // Trigger Hook
+        radar.on.memberChangeState( member, oldState );
 
         return member;
       },

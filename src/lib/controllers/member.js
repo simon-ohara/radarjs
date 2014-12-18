@@ -4,9 +4,10 @@
       MemberBody = _root.display.bodies.member;
 
   function MemberController() {
-    var store = _root.stores[ this.store ],
-        display = this.display,
-        groupController = this.groupController;
+    var radar = this,
+        store = _root.stores[ radar.store ],
+        display = radar.display,
+        groupController = radar.groupController;
 
     store.members = {};
 
@@ -35,11 +36,16 @@
       },
 
       update: function( member, stateData ) {
-        for(var prop in stateData) {
+        var prop, oldState = member.state;
+
+        for(prop in stateData) {
           if( stateData.hasOwnProperty( prop ) ) {
             member.state[ prop ] = stateData[ prop ];
           }
         }
+
+        // Trigger Hook
+        radar.on.memberChangeState( member, oldState );
 
         return member;
       },
