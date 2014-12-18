@@ -31,31 +31,13 @@ describe("Radar", function() {
     expect(subject.on).toBeDefined();
   });
 
-  describe("#on", function() {
+  describe("#on - (hooks)", function() {
     it("has a memberChangeState hook", function() {
       expect( subject.on.memberChangeState ).toBeDefined();
     });
   });
 
-  xdescribe("#screen", function() {
-    it("is an object", function() {
-      expect(typeof subject.screen).toBe('object');
-    });
-
-    it("has an element property that contains a canvas element", function() {
-      expect(subject.screen.element.nodeName).toBe('CANVAS');
-    });
-
-    it("has a width property that is a number", function() {
-      expect(typeof subject.screen.width).toBe('number');
-    });
-
-    it("has a height property that is a number", function() {
-      expect(typeof subject.screen.height).toBe('number');
-    });
-  });
-
-  xdescribe("#start", function() {
+  describe("#start", function() {
     it("is defined", function() {
       expect(subject.start).toBeDefined();
     });

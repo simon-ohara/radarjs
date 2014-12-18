@@ -136,4 +136,25 @@ describe('StoreController', function() {
       });
     });
   });
+
+  describe("#remove", function() {
+    var radar, member, members, subject, data;
+
+    beforeEach( function() {
+      data = DATA.foo;
+
+      radar = new Radar();
+      subject = radar.storeController;
+      members = radar.memberController;
+
+      spyOn( members, 'destroy' ).and.callThrough();
+    });
+
+    it("calls #destroy on the member controller", function() {
+      member = subject.update( data.members[0] ); 
+      subject.remove( member );
+
+      expect( members.destroy ).toHaveBeenCalled();
+    });
+  });
 });
