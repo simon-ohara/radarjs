@@ -1,21 +1,59 @@
 describe('StoreController', function() {
-  var radar = new Radar(),
-      subject = radar.storeController,
-      exampleData = DATA.foo.members[0];
 
   describe("#update", function() {
-    var newGroupData = DATA.bar.members[0],
-        newMemberData = DATA.bar.members[1];
+    var radar, groups, members, subject, data, existingGroup;
 
-    it("is defined", function() {
-      expect(subject.update).toBeDefined();
+    beforeEach( function() {
+      data = DATA.foo;
+      existingGroup = DATA.bar;
+
+      radar = new Radar();
+      subject = radar.storeController;
+      groups = radar.groupController;
+      members = radar.memberController;
+
+      subject.update( existingGroup.members[0] );
+
+      spyOn( groups, 'read' ).and.callThrough();
+      spyOn( groups, 'create' ).and.callThrough();
+      spyOn( members, 'read' ).and.callThrough();
+      spyOn( members, 'create' ).and.callThrough();
     });
 
-    it("always returns the updated member object from the store", function() {
-      var updatedGroupMember = subject.update( exampleData );
+    it("calls #get and then #add for groups that do no exist", function() {
+      subject.update( data.members[0] );
 
-      expect( updatedGroupMember.id ).toEqual( exampleData.member );
-      expect( updatedGroupMember.group ).toEqual( exampleData.group );
+      // From #get
+      expect( groups.read ).toHaveBeenCalledWith( data.group );
+      // From #add
+      expect( groups.create ).toHaveBeenCalledWith( data.group );
+    });
+
+    it("calls #get and then #add for members that do not exist", function() {
+      subject.update( data.members[0] );
+
+      // From #get
+      expect( members.read ).toHaveBeenCalledWith( data.members[0].member );
+      // From #add
+      expect( members.create ).toHaveBeenCalledWith( data.members[0].member, data.group );
+    });
+
+    it("calls #get but not create for existing groups", function() {
+      subject.update( existingGroup.members[1] );
+
+      // From #get
+      expect( groups.read ).toHaveBeenCalledWith( existingGroup.group );
+      // From #add
+      expect( groups.create ).not.toHaveBeenCalled();
+    });
+
+    it("calls #get but not create for existing groups", function() {
+      subject.update( existingGroup.members[0] );
+
+      // From #get
+      expect( members.read ).toHaveBeenCalledWith( existingGroup.members[0].member );
+      // From #add
+      expect( members.create ).not.toHaveBeenCalled();
     });
 
     describe("argument validation", function() {
@@ -51,42 +89,50 @@ describe('StoreController', function() {
   });
 
   describe("#get", function() {
-    beforeAll( function() {
-      subject.update( exampleData );
+    var radar, groups, members, subject, data, existingGroup;
+
+    beforeEach( function() {
+      data = DATA.foo;
+      existingGroup = DATA.bar;
+
+      radar = new Radar();
+      subject = radar.storeController;
+      groups = radar.groupController;
+      members = radar.memberController;
+
+      subject.update( data.members[0] );
+
+      spyOn( groups, 'read' ).and.callThrough();
+      spyOn( groups, 'create' ).and.callThrough();
+      spyOn( members, 'read' ).and.callThrough();
+      spyOn( members, 'create' ).and.callThrough();
     });
 
     describe("groups", function() {
-      it("returns a single group object when passed a string of an existing groups id", function() {
-        var retrievedGroup = subject.get( exampleData.group );
+      it("calls #read on the memberController", function() {
+        subject.get( data.group );
 
-        expect( retrievedGroup.id ).toBe( exampleData.group );
+        expect( members.read ).toHaveBeenCalledWith( data.group );
       });
 
-      it("returns undefined when passed a string of an id for a gorup that does not exist", function() {
-        var nonGroup = subject.get( "This Group doesn't exist!" );
+      it("calls #read on the groupController", function() {
+        subject.get( data.group );
 
-        expect( nonGroup ).not.toBeDefined();
+        expect( groups.read ).toHaveBeenCalledWith( data.group );
       });
     });
 
     describe("members", function() {
-      it("returns a member object when passed two strings as arguments", function() {
-        var retrievedMember = subject.get( exampleData.member, exampleData.group );
+      it("calls #read on the memberController", function() {
+        subject.get( data.members[0].member );
 
-        expect( retrievedMember.id ).toBe( exampleData.member );
+        expect( members.read ).toHaveBeenCalledWith( data.members[0].member );
       });
 
-      it("returns a member object when passed a string and a group object as arguments", function() {
-        var groupObject = subject.get( exampleData.group ),
-            retrievedMember = subject.get( exampleData.member, groupObject );
+      it("does not call #read on the groupController", function() {
+        subject.get( data.members[0].member );
 
-        expect( retrievedMember.id ).toBe( exampleData.member );
-      });
-
-      it("returns undefined when passed a string id for a member that does not exist", function() {
-        var nonMember = subject.get( "This Member does not exist", exampleData.group );
-
-        expect( nonMember ).not.toBeDefined();
+        expect( groups.read ).not.toHaveBeenCalled();
       });
     });
   });

@@ -563,9 +563,14 @@
       var group, member;
 
       if( check( data ).isValid ) {
-        group = get( data.group ) || add( data.group );
-        member = get( data.member ) || add( data.member, group.id );
-
+        // Check to see if grou exists
+        if( get( data.group ) === undefined ) {
+          // Create group if not
+          add( data.group );
+        }
+        // Find or create the member object
+        member = get( data.member ) || add( data.member, data.group );
+        // Update the member object with the passed state
         return mbr.update( member, data.state );
       }
     }
