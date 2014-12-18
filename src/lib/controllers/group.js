@@ -7,6 +7,8 @@
     var store = _root.stores[ this.store ],
         display = this.display;
 
+    store.groups = {};
+
     function addBody( groupId ) {
       var body = new GroupBody( groupId );
 
@@ -21,31 +23,20 @@
         var newGroup = new Group( groupId );
         newGroup.body = addBody( groupId );
 
-        store.groups.push( newGroup );
+        store.groups[ groupId ] = newGroup;
 
         return newGroup;
       },
 
       read: function( groupId ) {
-        var idx, group,
-            groups = store.groups,
-            totalGroups = groups.length;
-
-        if( groupId && totalGroups ) {
-          for( idx=0; idx<totalGroups; idx++ ) {
-            if( groups[ idx ].id === groupId ) {
-              group = groups[ idx ];
-              break;
-            }
-          }
-        }
-
-        return group;
+        return store.groups[ groupId ];
       },
 
       update: function() {},
 
-      destroy: function() {}
+      destroy: function() {},
+
+      check: function() {}
     };
   }
 

@@ -332,6 +332,268 @@
 })();
 ;(function() {
 
+  // var screen, display, internals = _internal.display;
+
+  function Display( modules ) {
+    // var renderer = internals.renderer( screen );
+        // behaviors = internals.behaviors.init();
+
+    this.__proto__ = physics( function(world) {
+      // subscribe to events
+      world.on('step', function() { world.render(); });
+      // world.on({
+        // 'step': function() { world.render(); },
+        // 'service:convoy:added': addConvoy,
+        // 'service:convoy:removed': removeConvoy,
+        // 'service:container:added': addContainer,
+        // 'service:container:removed': removeContainer,
+        // 'service:container:updated': updateContainer
+      // });
+
+      world.add( modules.renderer );
+      world.add( modules.behaviors );
+      // apply settings to world
+      // world.add([
+        // Physics.behavior('container-behavior'),
+        // Physics.behavior('convoy-behavior'),
+        // Physics.behavior('convoy-interact'),
+        // Physics.behavior('lockring-behavior'),
+        // viewPortEdge,
+      // ]);
+
+      // subscribe to ticker to advance the simulation
+      physics.util.ticker.on( function( time, dt ){
+        world.step( time );
+      });
+
+      // start the ticker
+      // physics.util.ticker.start();
+    });
+  }
+
+  function applyDisplayModules() {
+    var module, modules = _root.display.modules;
+
+    for( module in modules ) {
+      this[ module ] = modules[ module ].call(this);
+    }
+  }
+
+  function RadarDisplay() {
+    // _internal.display.behaviors.addTo( display );
+    this.behaviors = _root.display.behaviors;
+
+    applyDisplayModules.call( this );
+
+    return new Display( this );
+  };
+
+  _root.modules.display = RadarDisplay;
+
+})();
+;(function() {
+
+  var Group = _root.models.group,
+      GroupBody = _root.display.bodies.group;
+
+  function GroupController() {
+    var store = _root.stores[ this.store ],
+        display = this.display;
+
+    store.groups = {};
+
+    function addBody( groupId ) {
+      var body = new GroupBody( groupId );
+
+      display.addBody( body );
+
+      return body; 
+    }
+
+    return {
+
+      create: function( groupId ) {
+        var newGroup = new Group( groupId );
+        newGroup.body = addBody( groupId );
+
+        store.groups[ groupId ] = newGroup;
+
+        return newGroup;
+      },
+
+      read: function( groupId ) {
+        return store.groups[ groupId ];
+      },
+
+      update: function() {},
+
+      destroy: function() {},
+
+      check: function() {}
+    };
+  }
+
+  _root.modules.groupController = GroupController;
+
+})();
+;(function() {
+
+  var Member = _root.models.member,
+      MemberBody = _root.display.bodies.member;
+
+  function MemberController() {
+    var store = _root.stores[ this.store ],
+        display = this.display,
+        groupController = this.groupController;
+
+    store.members = {};
+
+    function addBody( memberId ) {
+      var body = new MemberBody( memberId );
+
+      display.addBody( body );
+
+      return body; 
+    }
+
+    return {
+
+      create: function( memberId, groupId ) {
+        var newMember = new Member( memberId, groupId );
+        newMember.body = addBody( memberId );
+
+        store.members[ memberId ] = newMember;
+        store.groups[ groupId ].members.push( memberId );
+
+        return newMember;
+      },
+
+      read: function( memberId ) {
+        return store.members[ memberId ];
+      },
+
+      update: function( member, stateData ) {
+        for(var prop in stateData) {
+          if( stateData.hasOwnProperty( prop ) ) {
+            member.state[ prop ] = stateData[ prop ];
+          }
+        }
+
+        return member;
+      },
+
+      destroy: function( member ) {
+        var idx, group, members, removed;
+
+        // Remove body from the display
+        display.removeBody( member.body );
+        
+        group = store.groups[ member.group ];
+        members = group.members;
+        idx = members.indexOf( member );
+
+        // Remove the reference from group members
+        removed = members.splice( idx, 1 );
+        groupController.check();
+
+        delete store.members[ member.id ];
+      }
+    };
+  }
+
+  _root.modules.memberController = MemberController;
+
+})();
+;(function() {
+
+  // A controller to manage data in the private root store object
+  //
+  // methods: add, get, set, remove
+  //
+  function StoreController() {
+    var radar = this,
+        store = _root.stores[ radar.store ],
+        grp = radar.groupController,
+        mbr = radar.memberController;
+
+    function add( id, groupId ) {
+      if( groupId ) {
+        return mbr.create.apply( radar, arguments );
+      }
+
+      return grp.create( id );
+    }
+
+    function get( id ) {
+      return mbr.read( id ) || grp.read( id );
+    }
+
+    function update( data ) {
+      var group, member;
+
+      if( check( data ).isValid ) {
+        group = get( data.group ) || add( data.group );
+        member = get( data.member ) || add( data.member, group.id );
+
+        return mbr.update( member, data.state );
+      }
+    }
+
+    function remove( member ) {
+      return mbr.destroy( member );
+    }
+
+    return {
+      update: update,
+      get: get,
+      remove: remove
+    };
+  }
+
+
+  // Check the validity of the data being passed through
+  //
+  // data should be of the structure
+  //  {
+  //    member: "member ID as a string",
+  //    group: "group ID as a string",
+  //    state: {} // an object containing arbitrary data
+  //  }
+  //
+  // returns an object with an isValid property set to a boolean value
+  //
+  function check( data ) {
+    var requiredProperties = [ "member", "group", "state" ],
+        missingProperties = [],
+        result = { isValid: false };
+
+    // The data param must be an object
+    if(typeof data !== 'object') {
+      throw new TypeError("Invalid argument type: '" + data + "' is not an object.");
+    }
+
+    // Does data contain all of the required properties?
+    if( data.member && data.group && data.state ) {
+      result.isValid = true;
+      return result;
+    } else {
+      requiredProperties.map( function( propertyName, index, propertiesArray ) {
+        if( data[ propertyName ] === undefined ) {
+          missingProperties.push( propertyName );
+        }
+      });
+
+      throw new DataStructureError("Invalid Data Structure: The argument passed doe not contain the properties " + missingProperties.join(" or "));
+    }
+
+    return result;
+  }
+
+  // Export the StoreController to the package-root modules object
+  _root.modules.storeController = StoreController;
+})();
+;(function() {
+
   var attractors  = {
         global: physics.behavior('attractor', {
           order: 1,
@@ -504,285 +766,6 @@
 
   _root.display.modules.groupBehavior = GroupBehavior;
 
-})();
-;(function() {
-
-  // var screen, display, internals = _internal.display;
-
-  function Display( modules ) {
-    // var renderer = internals.renderer( screen );
-        // behaviors = internals.behaviors.init();
-
-    this.__proto__ = physics( function(world) {
-      // subscribe to events
-      world.on('step', function() { world.render(); });
-      // world.on({
-        // 'step': function() { world.render(); },
-        // 'service:convoy:added': addConvoy,
-        // 'service:convoy:removed': removeConvoy,
-        // 'service:container:added': addContainer,
-        // 'service:container:removed': removeContainer,
-        // 'service:container:updated': updateContainer
-      // });
-
-      world.add( modules.renderer );
-      world.add( modules.behaviors );
-      // apply settings to world
-      // world.add([
-        // Physics.behavior('container-behavior'),
-        // Physics.behavior('convoy-behavior'),
-        // Physics.behavior('convoy-interact'),
-        // Physics.behavior('lockring-behavior'),
-        // viewPortEdge,
-      // ]);
-
-      // subscribe to ticker to advance the simulation
-      physics.util.ticker.on( function( time, dt ){
-        world.step( time );
-      });
-
-      // start the ticker
-      // physics.util.ticker.start();
-    });
-  }
-
-  function applyDisplayModules() {
-    var module, modules = _root.display.modules;
-
-    for( module in modules ) {
-      this[ module ] = modules[ module ].call(this);
-    }
-  }
-
-  function RadarDisplay() {
-    // _internal.display.behaviors.addTo( display );
-    this.behaviors = _root.display.behaviors;
-
-    applyDisplayModules.call( this );
-
-    return new Display( this );
-  };
-
-  _root.modules.display = RadarDisplay;
-
-})();
-;(function() {
-
-  var Group = _root.models.group,
-      GroupBody = _root.display.bodies.group;
-
-  function GroupController() {
-    var store = _root.stores[ this.store ],
-        display = this.display;
-
-    function addBody( groupId ) {
-      var body = new GroupBody( groupId );
-
-      display.addBody( body );
-
-      return body; 
-    }
-
-    return {
-
-      create: function( groupId ) {
-        var newGroup = new Group( groupId );
-        newGroup.body = addBody( groupId );
-
-        store.groups.push( newGroup );
-
-        return newGroup;
-      },
-
-      read: function( groupId ) {
-        var idx, group,
-            groups = store.groups,
-            totalGroups = groups.length;
-
-        if( groupId && totalGroups ) {
-          for( idx=0; idx<totalGroups; idx++ ) {
-            if( groups[ idx ].id === groupId ) {
-              group = groups[ idx ];
-              break;
-            }
-          }
-        }
-
-        return group;
-      },
-
-      update: function() {},
-
-      destroy: function() {}
-    };
-  }
-
-  _root.modules.groupController = GroupController;
-
-})();
-;(function() {
-
-  var Member = _root.models.member,
-      MemberBody = _root.display.bodies.member;
-
-  function MemberController() {
-    var display = this.display;
-
-    function addBody( memberId ) {
-      var body = new MemberBody( memberId );
-
-      display.addBody( body );
-
-      return body; 
-    }
-
-    return {
-
-      create: function( memberId, group ) {
-        var newMember = new Member( memberId, group.id );
-        newMember.body = addBody( memberId );
-
-        group.members.push( newMember );
-
-        return newMember;
-      },
-
-      read: function( memberId, group ) {
-        var idx, member,
-            members = group.members,
-            totalMembers = members.length;
-
-        if( memberId && totalMembers ) {
-          for( idx=0; idx<totalMembers; idx++ ) {
-            if( members[ idx ].id === memberId ) {
-              member = members[ idx ];
-              break;
-            }
-          }
-        }
-
-        return member;
-      },
-
-      update: function( member, stateData ) {
-        for(var prop in stateData) {
-          if( stateData.hasOwnProperty( prop ) ) {
-            member.state[ prop ] = stateData[ prop ];
-          }
-        }
-
-        return member;
-      },
-
-      destroy: function() {}
-    };
-  }
-
-  _root.modules.memberController = MemberController;
-
-})();
-;(function() {
-
-  // A controller to manage data in the private root store object
-  //
-  // methods: add, get, set, remove
-  //
-  function StoreController() {
-    var radar = this,
-        store = _root.stores[ radar.store ],
-        grp = radar.groupController,
-        mbr = radar.memberController;
-
-    store.groups = store.groups || [];
-
-    function add() {
-      var id = arguments[0],
-          group = arguments[1];
-
-      if( group && typeof group === 'object' && group instanceof Object ) {
-        return mbr.create.apply( radar, arguments );
-      }
-
-      return grp.create.apply( radar, arguments );
-    }
-
-    function get() {
-      var id = arguments[0],
-          group = arguments[1];
-
-      if( group ) {
-        if( typeof group === 'string' ) {
-          // Retieve the group object
-          group = get( group );
-          // Run through this function again with a group object
-          return get( id, group );
-        }
-        
-        else if( typeof group === 'object' && group instanceof Object ) {
-          return mbr.read.apply( radar, arguments );
-        }
-      }
-
-      return grp.read.apply( radar, arguments );
-    } 
-
-    return {
-      update: function( data ) {
-        var group, member;
-
-        if( check( data ).isValid ) {
-          group = get( data.group ) || add( data.group );
-          member = get( data.member, group ) || add( data.member, group );
-
-          return mbr.update.apply( radar, [ member, data.state ] );
-        }
-      },
-
-      get: get
-    };  
-  }
-
-
-  // Check the validity of the data being passed through
-  //
-  // data should be of the structure
-  //  {
-  //    member: "member ID as a string",
-  //    group: "group ID as a string",
-  //    state: {} // an object containing arbitrary data
-  //  }
-  //
-  // returns an object with an isValid property set to a boolean value
-  //
-  function check( data ) {
-    var requiredProperties = [ "member", "group", "state" ],
-        missingProperties = [],
-        result = { isValid: false };
-
-    // The data param must be an object
-    if(typeof data !== 'object') {
-      throw new TypeError("Invalid argument type: '" + data + "' is not an object.");
-    }
-
-    // Does data contain all of the required properties?
-    if( data.member && data.group && data.state ) {
-      result.isValid = true;
-      return result;
-    } else {
-      requiredProperties.map( function( propertyName, index, propertiesArray ) {
-        if( data[ propertyName ] === undefined ) {
-          missingProperties.push( propertyName );
-        }
-      });
-
-      throw new DataStructureError("Invalid Data Structure: The argument passed doe not contain the properties " + missingProperties.join(" or "));
-    }
-
-    return result;
-  }
-
-  // Export the StoreController to the package-root modules object
-  _root.modules.storeController = StoreController;
 })();
 
 

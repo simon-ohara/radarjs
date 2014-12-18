@@ -1,69 +1,71 @@
 describe("MemberController", function() {
   describe("#create", function() {
-    var radar, store, data, display, group, member, memberData, memberBody;
+    var radar, store, data, subject, display, groups, group, member, memberData, memberBody;
 
-    beforeAll( function() {
+    beforeEach( function() {
       radar = new Radar();
       store = radar.storeController;
-      data = DATA.foo;
+      groups = radar.groupController;
       display = radar.display;
+      subject = radar.memberController;
+      data = DATA.foo;
+      memberData = data.members[0];
+
+      groups.create( data.group );
     });
 
     it("adds a new member to the store", function() {
-      memberData = data.members[0];
+      expect( store.get( memberData.member, data.group ) ).not.toBeDefined();
 
-      expect( store.get( memberData.member, memberData.group ) ).not.toBeDefined();
-      store.update( memberData );
+      subject.create( memberData.member, data.group );
 
-      group = store.get( data.group );
-      member = store.get( memberData.member, group );
-
-      expect( member ).toBeDefined();
+      expect( store.get( memberData.member, data.group ) ).toBeDefined();
     });
 
     it("assigns the member properties on the new member", function() {
+      member = subject.create( memberData.member, data.group );
       expect( member.id ).toEqual( memberData.member );
       expect( member.group ).toEqual( memberData.group );
       expect( member.state ).toEqual( memberData.state );
     });
 
     it("creates a new member body in the display", function() {
-      memberData = data.members[1];
+      expect( display.findOne({ id: memberData.member, entity: 'member' }) ).toBeFalsy();
 
-      expect( display.findOne({ id: memberData.memberi, entity: 'member' }) ).toBeFalsy();
-
-      store.update( memberData );
+      subject.create( memberData.member, data.group );
 
       expect( display.findOne({ id: memberData.member, entity: 'member' }) ).not.toBeFalsy();
     });
 
     it("stores a reference of the member body against the member object", function() {
+      member = subject.create( memberData.member, data.group );
       memberBody = display.findOne({ id: memberData.member, entity: 'member' });
-      member = store.get( memberData.member, group );
 
       expect( member.body ).toEqual( memberBody );
     });
   });
 
   describe("#read", function() {
-    var radar, store, data, group, member, memberData;
+    var radar, store, data, subject, groups, member, memberData;
 
-    beforeAll( function() {
+    beforeEach( function() {
       radar = new Radar();
       store = radar.storeController;
+      groups = radar.groupController;
+      subject = radar.memberController;
       data = DATA.foo;
       memberData = data.members[0];
+
+      groups.create( data.group );
     });
 
     it("returns undefined if requested member does not exist", function() {
-      expect( store.get( memberData.member, data.group ) ).not.toBeDefined();
+      expect( subject.read( memberData.member, data.group ) ).not.toBeDefined();
     });
 
     it("returns the member object if it exists", function() {
-      store.update( memberData );
-
-      group = store.get( data.group );
-      member = store.get( memberData.member, group );
+      subject.create( memberData.member, data.group );
+      member = subject.read( memberData.member, data.group );
 
       expect( member.id ).toEqual( memberData.member );
       expect( member.group ).toEqual( memberData.group );
@@ -72,48 +74,70 @@ describe("MemberController", function() {
   });
 
   describe("#update", function() {
-    var radar, store, data, group, member, memberData;
+    var radar, store, subject, data, groups, member, memberData, newState;
 
-    beforeAll( function() {
+    beforeEach( function() {
       radar = new Radar();
       store = radar.storeController;
+      groups = radar.groupController;
+      subject = radar.memberController;
       data = DATA.foo;
       memberData = data.members[0];
-    });
+      newState = {
+        a: "ThisIsTheFirst",
+        b: "ThisIsTheSecond"
+      };
 
-    it("sets the member state for a new member", function() {
-      expect( store.get( memberData.member, data.group ) ).not.toBeDefined();
-
-      memberData.state.foo = false;
-
-      store.update( memberData );
-
-      group = store.get( data.group );
-
-      expect( store.get( memberData.member, group ).state.foo ).toBeFalsy();
+      groups.create( data.group );
     });
 
     it("updates the state of an existing member", function() {
-      expect( store.get( memberData.member, data.group ) ).toBeDefined();
-      
-      memberData.state.foo = true;
+      member = subject.create( memberData.member, data.group );
+      subject.update( member, { foo: newState.a } );
+      expect( member.state.foo ).toEqual( newState.a );
 
-      store.update( memberData );
-
-      expect( store.get( memberData.member, group ).state.foo ).toBeTruthy();
+      subject.update( member, { foo: newState.b } );
+      expect( member.state.foo ).toEqual( newState.b );
     });
 
     it("retains existing member state data if it is not referenced in an update", function() {
-      expect( store.get( memberData.member, group ).state.foo ).toEqual( true );
+      member = subject.create( memberData.member, data.group );
+      subject.update( member, { foo: newState.a } );
+      subject.update( member, { bar: newState.b } );
 
-      memberData.state = {
-        bar: "Another Property"
-      };
+      expect( member.state.foo ).toEqual( newState.a );
+      expect( member.state.bar ).toEqual( newState.b );
+    });
+  });
 
-      store.update( memberData );
+  describe("#destroy", function() {
+    var radar, store, subject, data, display, groups, member, memberData;
 
-      expect( store.get( memberData.member, group ).state.foo ).toEqual( true );
-      expect( store.get( memberData.member, group ).state.bar ).toBe( "Another Property" );
+    beforeEach( function() {
+      radar = new Radar();
+      store = radar.storeController;
+      groups = radar.groupController;
+      subject = radar.memberController;
+      display = radar.display;
+      data = DATA.foo;
+      memberData = data.members[0];
+
+      spyOn( groups, 'check' );
+      groups.create( data.group );
+      member = subject.create( memberData.member, data.group );
+      subject.destroy( member );
+    });
+
+    it("removes the referenced members body from the display", function() {
+      expect( display.findOne({ id: member.id, entity: 'member' }) ).toBeFalsy();
+    });
+
+    it("removes the referenced member from the store", function() {
+      expect( store.get( member.id, data.group ) ).not.toBeDefined();
+    });
+
+    it("asks the parent group to run a check on member numbers", function() {
+      expect( groups.check ).toHaveBeenCalled();
     });
   });
 });

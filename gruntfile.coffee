@@ -20,16 +20,16 @@ module.exports = (grunt) ->
       'src/lib/display/bodies/group.js'
       'src/lib/display/bodies/member.js'
       'src/lib/display/bodies.js'
-      # 'src/lib/display/behaviors/member.js'
-      'src/lib/display/behaviors/group.js'
       'src/lib/display.js'
 
-      # Services
+      # Controllers
       'src/lib/controllers/group.js'
       'src/lib/controllers/member.js'
       'src/lib/controllers/store.js'
 
-      # 'src/lib/services/display.js'
+      # Display Behaviors 
+      # 'src/lib/display/behaviors/member.js'
+      'src/lib/display/behaviors/group.js'
 
     ]
 

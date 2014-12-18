@@ -10,53 +10,38 @@
         grp = radar.groupController,
         mbr = radar.memberController;
 
-    store.groups = store.groups || [];
-
-    function add() {
-      var id = arguments[0],
-          group = arguments[1];
-
-      if( group && typeof group === 'object' && group instanceof Object ) {
+    function add( id, groupId ) {
+      if( groupId ) {
         return mbr.create.apply( radar, arguments );
       }
 
-      return grp.create.apply( radar, arguments );
+      return grp.create( id );
     }
 
-    function get() {
-      var id = arguments[0],
-          group = arguments[1];
+    function get( id ) {
+      return mbr.read( id ) || grp.read( id );
+    }
 
-      if( group ) {
-        if( typeof group === 'string' ) {
-          // Retieve the group object
-          group = get( group );
-          // Run through this function again with a group object
-          return get( id, group );
-        }
-        
-        else if( typeof group === 'object' && group instanceof Object ) {
-          return mbr.read.apply( radar, arguments );
-        }
+    function update( data ) {
+      var group, member;
+
+      if( check( data ).isValid ) {
+        group = get( data.group ) || add( data.group );
+        member = get( data.member ) || add( data.member, group.id );
+
+        return mbr.update( member, data.state );
       }
+    }
 
-      return grp.read.apply( radar, arguments );
-    } 
+    function remove( member ) {
+      return mbr.destroy( member );
+    }
 
     return {
-      update: function( data ) {
-        var group, member;
-
-        if( check( data ).isValid ) {
-          group = get( data.group ) || add( data.group );
-          member = get( data.member, group ) || add( data.member, group );
-
-          return mbr.update.apply( radar, [ member, data.state ] );
-        }
-      },
-
-      get: get
-    };  
+      update: update,
+      get: get,
+      remove: remove
+    };
   }
 
 

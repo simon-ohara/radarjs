@@ -4,7 +4,11 @@
       MemberBody = _root.display.bodies.member;
 
   function MemberController() {
-    var display = this.display;
+    var store = _root.stores[ this.store ],
+        display = this.display,
+        groupController = this.groupController;
+
+    store.members = {};
 
     function addBody( memberId ) {
       var body = new MemberBody( memberId );
@@ -16,30 +20,18 @@
 
     return {
 
-      create: function( memberId, group ) {
-        var newMember = new Member( memberId, group.id );
+      create: function( memberId, groupId ) {
+        var newMember = new Member( memberId, groupId );
         newMember.body = addBody( memberId );
 
-        group.members.push( newMember );
+        store.members[ memberId ] = newMember;
+        store.groups[ groupId ].members.push( memberId );
 
         return newMember;
       },
 
-      read: function( memberId, group ) {
-        var idx, member,
-            members = group.members,
-            totalMembers = members.length;
-
-        if( memberId && totalMembers ) {
-          for( idx=0; idx<totalMembers; idx++ ) {
-            if( members[ idx ].id === memberId ) {
-              member = members[ idx ];
-              break;
-            }
-          }
-        }
-
-        return member;
+      read: function( memberId ) {
+        return store.members[ memberId ];
       },
 
       update: function( member, stateData ) {
@@ -52,7 +44,22 @@
         return member;
       },
 
-      destroy: function() {}
+      destroy: function( member ) {
+        var idx, group, members, removed;
+
+        // Remove body from the display
+        display.removeBody( member.body );
+        
+        group = store.groups[ member.group ];
+        members = group.members;
+        idx = members.indexOf( member );
+
+        // Remove the reference from group members
+        removed = members.splice( idx, 1 );
+        groupController.check();
+
+        delete store.members[ member.id ];
+      }
     };
   }
 

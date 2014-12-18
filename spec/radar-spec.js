@@ -23,7 +23,7 @@ describe("Radar", function() {
   //   expect(subject.geometries).toBeDefined();
   // });
 
-  xit("has a display property", function() {
+  it("has a display property", function() {
     expect(subject.display).toBeDefined();
   });
 
