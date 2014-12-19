@@ -236,15 +236,20 @@
 })();
 ;(function() {
 
-  var element = _dom.createElement('canvas');
+  var element,
+      screenWidth = _global.innerWidth,
+      screenHeight = _global.innerHeight;
+  
+  element = _dom.createElement('canvas');
   element.id = 'RadarScreen';
 
   function DisplayScreen() {
     return {
       element: element,
       name: element.id,
-      width: _global.innerWidth,
-      height: _global.innerHeight
+      width: screenWidth,
+      height: screenHeight,
+      center: physics.vector( screenWidth, screenHeight ).mult( 0.5 ) 
     };
   }
 
@@ -357,11 +362,19 @@
 })();
 ;(function() {
 
-  // var screen, display, internals = _internal.display;
+  function Display() {
+    var display = this;
 
-  function Display( modules ) {
-    // var renderer = internals.renderer( screen );
-        // behaviors = internals.behaviors.init();
+    display.behaviors = _root.display.behaviors;
+    applyDisplayModules.call( display );
+
+    this.findAll = function( entity ) {
+      return display.find({ entity: entity });
+    };
+
+    this.findMembersOfGroup = function( groupId ) {
+      return display.find({ entity: 'member', group: groupId });
+    };
 
     this.__proto__ = physics( function(world) {
       // subscribe to events
@@ -375,8 +388,8 @@
         // 'service:container:updated': updateContainer
       // });
 
-      world.add( modules.renderer );
-      world.add( modules.behaviors );
+      world.add( display.renderer );
+      world.add( display.behaviors );
       // apply settings to world
       // world.add([
         // Physics.behavior('container-behavior'),
@@ -390,9 +403,6 @@
       physics.util.ticker.on( function( time, dt ){
         world.step( time );
       });
-
-      // start the ticker
-      // physics.util.ticker.start();
     });
   }
 
@@ -405,12 +415,7 @@
   }
 
   function RadarDisplay() {
-    // _internal.display.behaviors.addTo( display );
-    this.behaviors = _root.display.behaviors;
-
-    applyDisplayModules.call( this );
-
-    return new Display( this );
+    return new Display();
   };
 
   _root.modules.display = RadarDisplay;
@@ -442,6 +447,7 @@
         newGroup.body = addBody( groupId );
 
         store.groups[ groupId ] = newGroup;
+        display.emit( 'display:group:added', newGroup );
 
         return newGroup;
       },
@@ -637,7 +643,7 @@
         })
       },
       edges = {},
-      convoyBehaviors = [
+      groupBehaviors = [
         attractors.global,
         physics.behavior('body-impulse-response'),
         physics.behavior('sweep-prune'),
@@ -646,156 +652,140 @@
         // physics.behavior('interactive-custom', { el: radar.canvas })
       ];
 
-  // function addGroup( groupData ) {
-  //   // create a new group entity
-  //   var group = new _internal.geometries.groupBody( groupData.uid );
 
-  //   // save a reference to the store
-  //   groupData.body = group;
+  function behaviorMethods() {
+    var display = this;
 
-  //   // update the radar
-  //   this.display.add( group );
-  //   this.display.emit('display:group:added', groupData.uid);
-  // }
+    function applyGroupBehavior( group ) {
+      updateGroupBehaviors();
+      applyGroupAttractor( group.body );
+      applyGroupBounds( group.body );
+      updateGlobalAttractor();
+    }
 
-  function behaviorMethods( parent ) {
-    return {
-      init: function( options ) {
-        parent.init.call( this );
-        this.options( options );
-      },
-      connect: function( world ) {
-        this.display = world;
-        // world.on('store:group:added', addGroup, this);
-        // world.on('store:group:added', this.testing, this);
-        // world.on('store:group:added', function() {
-        //   console.log("in here"); 
-        // });
-        // world.on('display:group:added', this.applyGroupBehavior, this);
-        // world.on('display:container:added', this.updateGroup, this);
-        // world.on('display:container:removed', this.checkContainers, this);
+    function updateGroupBehaviors() {
+      groupBehaviors.map( function( item, index, arr ) {
+        item.applyTo( display.findAll('groups') );
+      }, this);
+      // groupBehaviors['lockring-collisions'].applyTo( entities.groups.concat(lockRing) );
+    }
 
-        // world.on('radar:lock:established', this.removeInteraction, this);
-        // world.on('radar:lock:released', this.applyInteraction, this);
-        // world.on('integrate:positions', this.behave, this);
-        // world.on('collisions:candidates', physics.util.throttle( this.lockCheck, 500), this);
+    function applyGroupAttractor( groupBody ) {
+      var attractor = physics.behavior('attractor', {
+        order: 1,
+        strength: 0.001,
+        groupTarget: groupBody.id
+      });
 
-        // this.updateGlobalAttractor();
+      attractor.position( groupBody.state.pos );
+      attractor.applyTo( display.findMembersOfGroup( groupBody.id ) );
 
-        // groupBehaviors.map( function( item, index, arr ) {
-        //   world.add( item.applyTo( [] ) );
-        // });
-          // physics.behavior('group-interaction'),
+      // store reference
+      attractors[ groupBody.id ] = attractor;
+      // add to the world
+      display.addBehavior( attractor );
+    }
 
-        // this.applyInteraction( world );
-      },
-      disconnect: function( world ) {
-        // world.off('manifest:container:updated', this.updateContainer, this);
-        // world.off('radar:container:added', this.containerAdded, this);
-        // world.off('integrate:positions', this.behave, this);
-      } //,
-      // updateGlobalAttractor: function() {
-      //   attractors.global.position( radar.center );
-      //   attractors.global.applyTo( this.allGroups() );
-      // },
-      // applyGroupBehavior: function( groupBody ) {
-      //   this.updateGroupBehaviors();
-      //   this.applyGroupAttractor( groupBody );
-      //   this.applyGroupBounds( groupBody );
-      //   this.updateGlobalAttractor();
-      // },
-      // allGroups: function() {
-      //   var groups;
-      //   
-      //   try {
-      //     groups = radar.display.find({ entity: 'group' });
-      //   } catch( e ) {
-      //     groups = [];
-      //   } finally {
-      //     return groups;
-      //   }
-      // },
-      // updateGroupBehaviors: function() {
-      //   groupBehaviors.map( function( item, index, arr ) {
-      //     item.applyTo( this.allGroups() );
-      //   }, this);
-      //   // groupBehaviors['lockring-collisions'].applyTo( entities.groups.concat(lockRing) );
-      // },
-      // applyGroupAttractor: function( groupBody ) {
-      //   var attractor = physics.behavior('attractor', {
-      //     order: 1,
-      //     strength: 0.001,
-      //     groupTarget: groupBody.name
-      //   });
+    function applyGroupBounds( groupBody ) {
+      var groupBounds = physics.aabb(groupBody.radius * 2, groupBody.radius * 2, groupBody.state.pos),
+          groupEdgeCollision = physics.behavior('edge-collision-detection', {
+            aabb: groupBounds,
+            restitution: 0.99,
+            cof: 0.99
+          });
 
-      //   attractor.position( groupBody.state.pos );
-      //   attractor.applyTo( this.groupContainers( groupBody.name ) );
+      edges[ groupBody.id ] = {
+        bounds: groupBounds,
+        collision: groupEdgeCollision
+      };
 
-      //   // store reference
-      //   attractors[groupBody.name] = attractor;
-      //   // add to the world
-      //   display.add( attractor );
-      // },
-      // applyGroupBounds: function( groupBody ) {
-      //   var groupBounds = physics.aabb(groupBody.radius * 2, groupBody.radius * 2, groupBody.state.pos),
-      //       groupEdgeCollision = physics.behavior('edge-collision-detection', {
-      //         aabb: groupBounds,
-      //         restitution: 0.99,
-      //         cof: 0.99
-      //       });
+      display.addBehavior( groupEdgeCollision.applyTo( display.findMembersOfGroup( groupBody.id ) ) );
+    }
 
-      //   edges[groupBody.name] = {
-      //     bounds: groupBounds,
-      //     collision: groupEdgeCollision
-      //   };
+    function updateGlobalAttractor() {
+      attractors.global.position( display.screen.center );
+      attractors.global.applyTo( display.findAll('group') );
+    }
 
-      //   display.add( groupEdgeCollision.applyTo( this.groupContainers( groupBody.name ) ) );
-      // },
-      // removeGroupAttractor: function( groupBody ) {
-      //   var attractor = attractors[groupBody.name];
+    // Returnable
+    return function( parent ) {
+      return {
+        init: function( options ) {
+          parent.init.call( this );
+          this.options( options );
+        },
+        connect: function( world ) {
+          // world.on('store:group:added', addGroup, this);
+          // world.on('store:group:added', this.testing, this);
+          // world.on('store:group:added', function() {
+          //   console.log("in here"); 
+          // });
+          world.on('display:group:added', applyGroupBehavior, this);
+          // world.on('display:container:added', this.updateGroup, this);
+          // world.on('display:container:removed', this.checkContainers, this);
 
-      //   if(attractor === undefined) {
-      //     return false;
-      //   } else {
-      //     view.remove( attractor );
-      //     delete attractor;
-      //     return true;
-      //   }
-      // },
-      // groupContainers: function( groupName ){
-      //   return radar.display.find({ entity: 'container', group: groupName });
-      // },
-      // updateGroup: function( containerData ) {
-      //   var groupName = containerData.group,
-      //       containers = this.groupContainers( groupName );
+          // world.on('radar:lock:established', this.removeInteraction, this);
+          // world.on('radar:lock:released', this.applyInteraction, this);
+          world.on('integrate:positions', this.behave, this);
+          // world.on('collisions:candidates', physics.util.throttle( this.lockCheck, 500), this);
 
-      //   attractors[groupName].applyTo( containers );
-      //   edges[groupName].collision.applyTo( containers );
-      // },
-      // behave: function( data ) {
-      //   var c, currentGroup, attractor,
-      //       groupsList = this.allGroups(),
-      //       numGroups = groupsList.length,
-      //       groupEdge, groupAttractor;
+          // this.updateGlobalAttractor();
 
-      //   for (c=0; c<numGroups; c++) {
-      //     currentGroup = groupsList[c];
-      //     groupAttractor = attractors[currentGroup.name];
-      //     groupEdge = edges[currentGroup.name];
+          // groupBehaviors.map( function( item, index, arr ) {
+          //   world.add( item.applyTo( [] ) );
+          // });
+            // physics.behavior('group-interaction'),
 
-      //     groupAttractor.position( currentGroup.state.pos );
+          // this.applyInteraction( world );
+        },
+        disconnect: function( world ) {
+          // world.off('manifest:container:updated', this.updateContainer, this);
+          // world.off('radar:container:added', this.containerAdded, this);
+          // world.off('integrate:positions', this.behave, this);
+        },
+        // removeGroupAttractor: function( groupBody ) {
+        //   var attractor = attractors[groupBody.id];
 
-      //     groupEdge.bounds.x = currentGroup.state.pos.x;
-      //     groupEdge.bounds.y = currentGroup.state.pos.y;
-      //     groupEdge.collision.setAABB( groupEdge.bounds );
-      //   }
-      // }
+        //   if(attractor === undefined) {
+        //     return false;
+        //   } else {
+        //     view.remove( attractor );
+        //     delete attractor;
+        //     return true;
+        //   }
+        // },
+        // updateGroup: function( containerData ) {
+        //   var groupName = containerData.group,
+        //       containers = this.groupContainers( groupName );
+
+        //   attractors[groupName].applyTo( containers );
+        //   edges[groupName].collision.applyTo( containers );
+        // },
+        behave: function( data ) {
+          var c, currentGroup, attractor,
+              groupsList = display.findAll('group'),
+              numGroups = groupsList.length,
+              groupEdge, groupAttractor;
+
+          for (c=0; c<numGroups; c++) {
+            currentGroup = groupsList[c];
+            groupAttractor = attractors[currentGroup.id];
+            groupEdge = edges[currentGroup.id];
+
+            groupAttractor.position( currentGroup.state.pos );
+
+            groupEdge.bounds.x = currentGroup.state.pos.x;
+            groupEdge.bounds.y = currentGroup.state.pos.y;
+            groupEdge.collision.setAABB( groupEdge.bounds );
+          }
+        }
+      };
     };
   }
 
   function GroupBehavior() {
     // Register new behavior with the physics engine
-    physics.behavior( 'group', behaviorMethods );
+    physics.behavior( 'group', behaviorMethods.call( this ) );
 
     _root.display.behaviors.push( physics.behavior( 'group' ) );
   }

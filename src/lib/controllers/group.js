@@ -24,6 +24,7 @@
         newGroup.body = addBody( groupId );
 
         store.groups[ groupId ] = newGroup;
+        display.emit( 'display:group:added', newGroup );
 
         return newGroup;
       },

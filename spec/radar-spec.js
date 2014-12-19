@@ -19,10 +19,6 @@ describe("Radar", function() {
     expect(subject.store).toMatch('store-');
   });
 
-  // it("has a geometries property", function() {
-  //   expect(subject.geometries).toBeDefined();
-  // });
-
   it("has a display property", function() {
     expect(subject.display).toBeDefined();
   });

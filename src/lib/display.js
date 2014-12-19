@@ -1,10 +1,18 @@
 (function() {
 
-  // var screen, display, internals = _internal.display;
+  function Display() {
+    var display = this;
 
-  function Display( modules ) {
-    // var renderer = internals.renderer( screen );
-        // behaviors = internals.behaviors.init();
+    display.behaviors = _root.display.behaviors;
+    applyDisplayModules.call( display );
+
+    this.findAll = function( entity ) {
+      return display.find({ entity: entity });
+    };
+
+    this.findMembersOfGroup = function( groupId ) {
+      return display.find({ entity: 'member', group: groupId });
+    };
 
     this.__proto__ = physics( function(world) {
       // subscribe to events
@@ -18,8 +26,8 @@
         // 'service:container:updated': updateContainer
       // });
 
-      world.add( modules.renderer );
-      world.add( modules.behaviors );
+      world.add( display.renderer );
+      world.add( display.behaviors );
       // apply settings to world
       // world.add([
         // Physics.behavior('container-behavior'),
@@ -33,9 +41,6 @@
       physics.util.ticker.on( function( time, dt ){
         world.step( time );
       });
-
-      // start the ticker
-      // physics.util.ticker.start();
     });
   }
 
@@ -48,12 +53,7 @@
   }
 
   function RadarDisplay() {
-    // _internal.display.behaviors.addTo( display );
-    this.behaviors = _root.display.behaviors;
-
-    applyDisplayModules.call( this );
-
-    return new Display( this );
+    return new Display();
   };
 
   _root.modules.display = RadarDisplay;

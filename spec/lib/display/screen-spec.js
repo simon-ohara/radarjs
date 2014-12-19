@@ -3,7 +3,7 @@ describe("DisplayScreen", function() {
 
   beforeEach( function() {
     radar = new Radar();
-    subject = radar.screen;
+    subject = radar.display.screen;
   }); 
 
   it("is an object", function() {
@@ -20,5 +20,9 @@ describe("DisplayScreen", function() {
 
   it("has a height property that is a number", function() {
     expect(typeof subject.height).toBe('number');
+  });
+
+  it("has a center property", function() {
+    expect( subject.center ).toBeDefined();
   });
 });

@@ -37,6 +37,13 @@ describe("GroupController", function() {
 
       expect( group.body ).toEqual( groupBody );
     });
+
+    it("notifies the display of the addition", function() {
+      spyOn( display, 'emit' );
+      group = subject.create( data.group );
+
+      expect( display.emit.calls.mostRecent().args ).toEqual([ 'display:group:added',  group ]);
+    });
   });
 
   describe("#read", function() {
