@@ -79,4 +79,14 @@ describe("RadarDisplay", function() {
       expect( members ).toEqual( subject.find({ entity: 'member', group: DATA.foo.group }) );
     });
   });
+
+  describe("#findBehavioryId", function() {
+    it("returns the behavior with the given id", function() {
+      var newBehavior = Physics.behavior('sweep-prune', { id: 'foo:behavior' } );
+
+      radar.display.addBehavior( newBehavior );
+
+      expect( radar.display.findBehaviorById( 'foo:behavior' ) ).toEqual( newBehavior );
+    });
+  });
 });

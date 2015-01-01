@@ -43,7 +43,7 @@ describe("MemberBehavior", function() {
         reinitializeInstance();
       });
 
-      it("applies all behaviors to each new group", function() {
+      it("applies all behaviors to each new member", function() {
         function expectNumBehaviorTargetsToBe( num ) {
           for( var b=0; b<numBehaviors; b++) {
             // Only look at the behaviors where the id is prefixed with 'member:'
@@ -60,6 +60,18 @@ describe("MemberBehavior", function() {
         // Add another new member to the display
         store.update( DATA.foo.members[1] );
         expectNumBehaviorTargetsToBe( 2 );
+      });
+
+      it("applies the members' group member attractor to the new member", function() {
+        var newMember, groupId, attractor, attractorTargets;
+
+        newMember = store.update( DATA.foo.members[0] );
+        groupId = newMember.group;
+        attractor = display.findBehaviorById('member:attractor:' + groupId);
+        attractorTargets = attractor.getTargets();
+
+        expect( attractorTargets.length ).toEqual( 1 );
+        expect( attractorTargets[0] ).toBe( newMember.body );
       });
     });
   });

@@ -48,7 +48,7 @@
       attractor.applyTo( [] );
       // store reference
       attractors[ groupBody.id ] = attractor;
-      // add to the world
+      // add to the display
       display.addBehavior( attractor );
     }
 
@@ -116,11 +116,11 @@
         disconnect: function( world ) {
           // Remove group behaviors
           groupBehaviors.map( function( item, index, arr ) {
-            world.removeBehavior( item.applyTo( [] ) );
+            world.removeBehavior( item );
           });
           // Unsubscribe from Events
-          world.on('display:group:added', applyGroupBehavior, this);
-          world.on('integrate:positions', this.behave, this);
+          world.off('display:group:added', applyGroupBehavior, this);
+          world.off('integrate:positions', this.behave, this);
           // world.off('manifest:container:updated', this.updateContainer, this);
           // world.off('radar:container:added', this.containerAdded, this);
           // world.off('integrate:positions', this.behave, this);

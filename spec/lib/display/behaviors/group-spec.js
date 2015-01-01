@@ -101,14 +101,6 @@ describe("GroupBehavior", function() {
         expect( memberAttractors[0]._pos.x ).toEqual( group.state.pos.x );
         expect( memberAttractors[0]._pos.y ).toEqual( group.state.pos.y );
       });
-
-      // Looks like this cant be done as the memners dont exist at the point
-      // of adding the attractor to the display/group
-      // It may work better if each member could add/remove itself from
-      // the attractor
-      it("applies the attractor to nothing", function() {
-        expect( memberAttractors[0].getTargets().length ).toBe( 0 );
-      });
     });
 
     describe("member containment", function() {

@@ -1,42 +1,24 @@
 (function() {
   var memberBehaviors = [
-    physics.behavior('body-impulse-response', { id: 'member:impulse' }),
-    physics.behavior('sweep-prune', { id: 'member:sweep' }),
-    physics.behavior('body-collision-detection', { id: 'member:collision' })
+    { name: 'body-impulse-response', id: 'impulse' },
+    { name: 'sweep-prune', id: 'sweep' },
+    { name: 'body-collision-detection', id: 'collision' }
   ];
-
-  // function addMember( memberData ) {
-  //   // create a new member entity
-  //   var member = new _internal.geometries.memberBody( memberData.uid );
-
-  //   // save a reference to the store
-  //   memberData.body = member;
-
-  //   // update the radar
-  //   this.display.add( member );
-  //   this.display.emit( 'display:member:added', memberData.uid );
-  // }
-
-  // function updateMember( memberData ) {
-  //   var member = this.display.findOne({ uid: memberData.uid, entity: 'member' });
-
-  //   if( member ) {
-  //     this.display.emit( 'display:member:updated', memberData.uid );
-  //   }
-  // }
-
-
-  // function allMembers() {
-  //   return this.display.find({ entity: 'member' });
-  // }
 
   function behaviorMethods() {
     var display = this;
 
     function applyMemberBehavior( member ) {
+      var attractor, members;
+
+      attractor = display.findBehaviorById('member:attractor:' + member.group);
+      members = display.findAll('member');
+
       memberBehaviors.map( function( item, index, arr ) {
-        item.applyTo( display.findMembersOfGroup( member.group ) );
+        display.findBehaviorById( 'member:' + item.id ).applyTo( members );
       }, this);
+
+      attractor.applyTo( members );
     }
 
     return function( parent ) {
@@ -50,10 +32,17 @@
           // world.on('store:member:updated', updateMember, this);
           // world.on('display:member:updated', this.updateMemberBehaviors, this);
           memberBehaviors.map( function( item, index, arr ) {
-            world.add( item.applyTo( [] ) );
+            var newBehavior = physics.behavior( item.name, { id: 'member:' + item.id });
+            world.addBehavior( newBehavior.applyTo( [] ) );
           }, this);
         },
         disconnect: function( world ) {
+          // Remove member behaviors
+          memberBehaviors.map( function( item, index, arr ) {
+            world.removeBehavior( item );
+          }, this);
+          // Unsubscribe from events
+          world.off('display:member:added', applyMemberBehavior, this);
           // world.off('store:member:added', addMember, this);
           // world.off('store:member:updated', updateMember, this);
         }

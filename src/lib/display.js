@@ -52,6 +52,21 @@
     this.findMembersOfGroup = function( groupId ) {
       return this.find({ entity: 'member', group: groupId });
     };
+
+    this.findBehaviorById = function( behaviorId ) {
+      var b, behaviors = this.getBehaviors(),
+          numBehaviors = behaviors.length,
+          targetBehavior;
+
+      for( b=0; b<numBehaviors; b++ ) {
+        if( behaviors[b].options.id === behaviorId ) {
+          targetBehavior = behaviors[b];
+          break;
+        }
+      } 
+
+      return targetBehavior;
+    };
   }
 
   function applyDisplayModules() {
