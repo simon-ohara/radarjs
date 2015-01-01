@@ -1,8 +1,8 @@
 (function() {
   var memberBehaviors = [
-    physics.behavior('body-impulse-response'),
-    physics.behavior('sweep-prune'),
-    physics.behavior('body-collision-detection')
+    physics.behavior('body-impulse-response', { id: 'member:impulse' }),
+    physics.behavior('sweep-prune', { id: 'member:sweep' }),
+    physics.behavior('body-collision-detection', { id: 'member:collision' })
   ];
 
   // function addMember( memberData ) {
@@ -25,19 +25,20 @@
   //   }
   // }
 
-  // function updateMemberBehaviors() {
-  //   var allMembers = this.allMembers();
-
-  //   memberBehaviors.map( function( item, index, arr ) {
-  //     item.applyTo( allMembers );
-  //   }, this);
-  // }
 
   // function allMembers() {
   //   return this.display.find({ entity: 'member' });
   // }
 
   function behaviorMethods() {
+    var display = this;
+
+    function applyMemberBehavior( member ) {
+      memberBehaviors.map( function( item, index, arr ) {
+        item.applyTo( display.findMembersOfGroup( member.group ) );
+      }, this);
+    }
+
     return function( parent ) {
       return {
         init: function( options ) {
@@ -45,12 +46,12 @@
           this.options( options );
         },
         connect: function( world ) {
-          // world.on('store:member:added', addMember, this);
+          world.on('display:member:added', applyMemberBehavior, this);
           // world.on('store:member:updated', updateMember, this);
           // world.on('display:member:updated', this.updateMemberBehaviors, this);
-          // memberBehaviors.map( function( item, index, arr ) {
-            // world.add( item.applyTo( [] ) );
-          // }, this);
+          memberBehaviors.map( function( item, index, arr ) {
+            world.add( item.applyTo( [] ) );
+          }, this);
         },
         disconnect: function( world ) {
           // world.off('store:member:added', addMember, this);

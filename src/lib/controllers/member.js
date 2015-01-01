@@ -28,6 +28,7 @@
 
         store.members[ memberId ] = newMember;
         store.groups[ groupId ].members.push( memberId );
+        display.emit( 'display:member:added', newMember );
 
         return newMember;
       },

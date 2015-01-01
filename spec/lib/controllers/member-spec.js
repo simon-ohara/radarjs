@@ -49,6 +49,13 @@ describe("MemberController", function() {
 
       expect( member.body ).toEqual( memberBody );
     });
+
+    it("notifies the display of the addition", function() {
+      spyOn( display, 'emit' );
+      member = subject.create( memberData.member, data.group );
+
+      expect( display.emit.calls.mostRecent().args ).toEqual([ 'display:member:added',  member ]);
+    });
   });
 
   describe("#read", function() {

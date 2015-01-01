@@ -24,7 +24,7 @@ describe("GroupBehavior", function() {
       for( b=0; b<numBehaviors; b++) {
         name = behaviors[b].options.id;
         if( name ) {
-          behaviorNames.push( behaviors[b].options.id )
+          behaviorNames.push( name );
         }
       }
     });
@@ -56,7 +56,7 @@ describe("GroupBehavior", function() {
         for( var b=0; b<numBehaviors; b++) {
           // Only look at the behaviors where the id is prefixed with 'group:'
           if( behaviors[b].options.id.match(/^group:/) ) {
-            expect( behaviors[b].getTargets().length ).toBe( 1 );
+            expect( behaviors[b].getTargets().length ).toBe( num );
           }
         }
       }
@@ -66,7 +66,7 @@ describe("GroupBehavior", function() {
       expectNumBehaviorTargetsToBe( 1 );
 
       // Add another new group to the display
-      store.update( DATA.foo.members[1] );
+      store.update( DATA.bar.members[0] );
       expectNumBehaviorTargetsToBe( 2 );
     });
 
