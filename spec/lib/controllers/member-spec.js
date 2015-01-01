@@ -37,6 +37,12 @@ describe("MemberController", function() {
       expect( display.findOne({ id: memberData.member, entity: 'member' }) ).not.toBeFalsy();
     });
 
+    it("stores a reference of the group on the body", function() {
+      subject.create( memberData.member, data.group );
+
+      expect( display.findOne({ id: memberData.member, entity: 'member' }).group ).toBe( data.group );
+    });
+
     it("stores a reference of the member body against the member object", function() {
       member = subject.create( memberData.member, data.group );
       memberBody = display.findOne({ id: memberData.member, entity: 'member' });

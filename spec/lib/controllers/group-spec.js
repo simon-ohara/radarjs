@@ -10,6 +10,10 @@ describe("GroupController", function() {
       data = DATA.foo;
     });
 
+    afterEach( function() {
+      radar = undefined;
+    });
+
     it("adds a new group to the store", function() {
       expect( store.get( data.group ) ).not.toBeDefined();
       subject.create( data.group );

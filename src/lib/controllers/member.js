@@ -24,6 +24,7 @@
       create: function( memberId, groupId ) {
         var newMember = new Member( memberId, groupId );
         newMember.body = addBody( memberId );
+        newMember.body.group = groupId;
 
         store.members[ memberId ] = newMember;
         store.groups[ groupId ].members.push( memberId );

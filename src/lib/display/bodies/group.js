@@ -3,8 +3,8 @@
 
   groupRGB = '189, 195, 199',
   options = {
-    x: 0,
-    y: 0,
+    x: 300,
+    y: 300,
     restitution: 0.99,
     radius: 30,
     mass: 4,

@@ -31,7 +31,7 @@ module.exports = (grunt) ->
       'src/lib/controllers/store.js'
 
       # Display Behaviors 
-      # 'src/lib/display/behaviors/member.js'
+      'src/lib/display/behaviors/member.js'
       'src/lib/display/behaviors/group.js'
 
     ]

@@ -4,7 +4,7 @@ describe("RadarDisplay", function() {
 
   it("inherits the Physics.world instance", function() {
     // this can be confirmed by checking there is a circular reference in the integrator
-    expect(subject._integrator._world).toEqual(subject.__proto__);
+    expect(subject._integrator._world).toBeDefined();
   });
 
   describe("its renderer", function() {
@@ -26,8 +26,31 @@ describe("RadarDisplay", function() {
   });
 
   describe("its behaviors", function() {
+    var b, behaviors, numBehaviors, behaviorNames, name;
+
+    beforeEach( function() {
+      behaviors = subject.getBehaviors();
+      numBehaviors = behaviors.length;
+      behaviorNames = [];
+
+      for( b=0; b<numBehaviors; b++ ) {
+        name = behaviors[b].options.id;
+        if( name ) {
+          behaviorNames.push( name );
+        } 
+      }
+    });
+
     it("are present", function() {
-      expect(subject._behaviors.length).toBeGreaterThan(0);
+      expect(behaviors.length).toBeGreaterThan(0);
+    });
+
+    it("include 'display:group'", function() {
+      expect(behaviorNames.indexOf('display:group')).toBeGreaterThan(-1);
+    });
+
+    it("include 'display:member'", function() {
+      expect(behaviorNames.indexOf('display:member')).toBeGreaterThan(-1);
     });
   });
 
@@ -52,6 +75,7 @@ describe("RadarDisplay", function() {
       radar.storeController.update( DATA.foo.members[0] );
       var members = subject.findMembersOfGroup( DATA.foo.group );
 
+      expect( members.length ).toBeGreaterThan( 0 );
       expect( members ).toEqual( subject.find({ entity: 'member', group: DATA.foo.group }) );
     });
   });

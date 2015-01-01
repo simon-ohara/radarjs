@@ -1,20 +1,15 @@
 (function() {
 
   function Display() {
-    var display = this;
+    var prop, engine, _this = this;
 
-    display.behaviors = _root.display.behaviors;
-    applyDisplayModules.call( display );
-
-    this.findAll = function( entity ) {
-      return display.find({ entity: entity });
+    this._radar = {
+      behaviors: []
     };
 
-    this.findMembersOfGroup = function( groupId ) {
-      return display.find({ entity: 'member', group: groupId });
-    };
+    applyDisplayModules.call( this );
 
-    this.__proto__ = physics( function(world) {
+    engine = physics( function(world) {
       // subscribe to events
       world.on('step', function() { world.render(); });
       // world.on({
@@ -26,8 +21,7 @@
         // 'service:container:updated': updateContainer
       // });
 
-      world.add( display.renderer );
-      world.add( display.behaviors );
+      world.add( _this.renderer );
       // apply settings to world
       // world.add([
         // Physics.behavior('container-behavior'),
@@ -42,6 +36,22 @@
         world.step( time );
       });
     });
+
+    for( prop in engine ) {
+      if( engine.hasOwnProperty( prop ) ) {
+        this[ prop ] = engine[ prop ];
+      }
+    }
+
+    this.__proto__ = engine.__proto__;
+
+    this.findAll = function( entity ) {
+      return this.find({ entity: entity });
+    };
+
+    this.findMembersOfGroup = function( groupId ) {
+      return this.find({ entity: 'member', group: groupId });
+    };
   }
 
   function applyDisplayModules() {
@@ -53,8 +63,11 @@
   }
 
   function RadarDisplay() {
-    return new Display();
-  };
+    var display =  new Display();
+    display.add( display._radar.behaviors );
+
+    return display;
+  }
 
   _root.modules.display = RadarDisplay;
 

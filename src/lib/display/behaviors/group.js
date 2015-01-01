@@ -2,16 +2,17 @@
 
   var attractors  = {
         global: physics.behavior('attractor', {
+          id: 'group:attractor',
           order: 1,
           strength: 0.001
         })
       },
-      edges = {},
+      containers = {},
       groupBehaviors = [
         attractors.global,
-        physics.behavior('body-impulse-response'),
-        physics.behavior('sweep-prune'),
-        physics.behavior('body-collision-detection'),
+        physics.behavior('body-impulse-response', { id: 'group:impulse' }),
+        physics.behavior('sweep-prune', { id: 'group:sweep' }),
+        physics.behavior('body-collision-detection', { id: 'group:collision' }),
         // physics.behavior('body-collision-detection', { channel: 'display:lockring:collided' }),
         // physics.behavior('interactive-custom', { el: radar.canvas })
       ];
@@ -22,54 +23,63 @@
 
     function applyGroupBehavior( group ) {
       updateGroupBehaviors();
-      applyGroupAttractor( group.body );
-      applyGroupBounds( group.body );
-      updateGlobalAttractor();
+      addGroupMemberAttractor( group.body );
+      addGroupMemberContainment( group.body );
     }
 
     function updateGroupBehaviors() {
       groupBehaviors.map( function( item, index, arr ) {
-        item.applyTo( display.findAll('groups') );
+        item.applyTo( display.findAll('group') );
       }, this);
       // groupBehaviors['lockring-collisions'].applyTo( entities.groups.concat(lockRing) );
     }
 
-    function applyGroupAttractor( groupBody ) {
+    function addGroupMemberAttractor( groupBody ) {
       var attractor = physics.behavior('attractor', {
         order: 1,
         strength: 0.001,
-        groupTarget: groupBody.id
+        groupTarget: groupBody.id,
+        id: 'member:attractor:' + groupBody.id
       });
 
+      // Set the position of the attractor to match the group
       attractor.position( groupBody.state.pos );
-      attractor.applyTo( display.findMembersOfGroup( groupBody.id ) );
-
+      // Ensure that the behavior is not applied to any existing bodies
+      attractor.applyTo( [] );
       // store reference
       attractors[ groupBody.id ] = attractor;
       // add to the world
       display.addBehavior( attractor );
     }
 
-    function applyGroupBounds( groupBody ) {
-      var groupBounds = physics.aabb(groupBody.radius * 2, groupBody.radius * 2, groupBody.state.pos),
-          groupEdgeCollision = physics.behavior('edge-collision-detection', {
-            aabb: groupBounds,
-            restitution: 0.99,
-            cof: 0.99
-          });
+    function addGroupMemberContainment( groupBody ) {
+      var groupBounds, groupEdgeCollision;
 
-      edges[ groupBody.id ] = {
+      groupBounds = physics.aabb(groupBody.radius * 2, groupBody.radius * 2, groupBody.state.pos),
+
+      groupEdgeCollision = physics.behavior('edge-collision-detection', {
+        aabb: groupBounds,
+        restitution: 0.99,
+        cof: 0.99,
+        id: 'member:containment:' + groupBody.id
+      });
+
+      // Ensure that the behavior is not applies to any existing bodies
+      groupEdgeCollision.applyTo( [] );
+      // store a reference
+      containers[ groupBody.id ] = {
         bounds: groupBounds,
         collision: groupEdgeCollision
       };
-
-      display.addBehavior( groupEdgeCollision.applyTo( display.findMembersOfGroup( groupBody.id ) ) );
+      // add to the world
+      display.addBehavior( groupEdgeCollision );
     }
 
-    function updateGlobalAttractor() {
-      attractors.global.position( display.screen.center );
-      attractors.global.applyTo( display.findAll('group') );
-    }
+    // This could be used to adjust the position on the
+    // window/screen resize event
+    // function updateGlobalAttractor() {
+    //   attractors.global.position( display.screen.center );
+    // }
 
     // Returnable
     return function( parent ) {
@@ -79,30 +89,38 @@
           this.options( options );
         },
         connect: function( world ) {
+          // Add group behaviors
+          groupBehaviors.map( function( item, index, arr ) {
+            world.addBehavior( item.applyTo( [] ) );
+          });
+
+          // Subscribe to Events
+          world.on('display:group:added', applyGroupBehavior, this);
+          world.on('integrate:positions', this.behave, this);
+
+
+
           // world.on('store:group:added', addGroup, this);
           // world.on('store:group:added', this.testing, this);
-          // world.on('store:group:added', function() {
-          //   console.log("in here"); 
-          // });
-          world.on('display:group:added', applyGroupBehavior, this);
           // world.on('display:container:added', this.updateGroup, this);
           // world.on('display:container:removed', this.checkContainers, this);
 
           // world.on('radar:lock:established', this.removeInteraction, this);
           // world.on('radar:lock:released', this.applyInteraction, this);
-          world.on('integrate:positions', this.behave, this);
           // world.on('collisions:candidates', physics.util.throttle( this.lockCheck, 500), this);
 
-          // this.updateGlobalAttractor();
-
-          // groupBehaviors.map( function( item, index, arr ) {
-          //   world.add( item.applyTo( [] ) );
-          // });
-            // physics.behavior('group-interaction'),
+          // physics.behavior('group-interaction'),
 
           // this.applyInteraction( world );
         },
         disconnect: function( world ) {
+          // Remove group behaviors
+          groupBehaviors.map( function( item, index, arr ) {
+            world.removeBehavior( item.applyTo( [] ) );
+          });
+          // Unsubscribe from Events
+          world.on('display:group:added', applyGroupBehavior, this);
+          world.on('integrate:positions', this.behave, this);
           // world.off('manifest:container:updated', this.updateContainer, this);
           // world.off('radar:container:added', this.containerAdded, this);
           // world.off('integrate:positions', this.behave, this);
@@ -134,7 +152,7 @@
           for (c=0; c<numGroups; c++) {
             currentGroup = groupsList[c];
             groupAttractor = attractors[currentGroup.id];
-            groupEdge = edges[currentGroup.id];
+            groupEdge = containers[currentGroup.id];
 
             groupAttractor.position( currentGroup.state.pos );
 
@@ -151,7 +169,7 @@
     // Register new behavior with the physics engine
     physics.behavior( 'group', behaviorMethods.call( this ) );
 
-    _root.display.behaviors.push( physics.behavior( 'group' ) );
+    this._radar.behaviors.push( physics.behavior( 'group', { id: 'display:group' }));
   }
 
   _root.display.modules.groupBehavior = GroupBehavior;
