@@ -9,16 +9,20 @@
     var display = this;
 
     function applyMemberBehavior( member ) {
-      var attractor, members;
+      var attractor, containment, allMembers, siblingMembers;
 
       attractor = display.findBehaviorById('member:attractor:' + member.group);
-      members = display.findAll('member');
+      containment = display.findBehaviorById('member:containment:' + member.group);
+      allMembers = display.findAll('member');
+      siblingMembers = display.findMembersOfGroup( member.group );
 
+      // Update each behaviors targets
       memberBehaviors.map( function( item, index, arr ) {
-        display.findBehaviorById( 'member:' + item.id ).applyTo( members );
+        display.findBehaviorById( 'member:' + item.id ).applyTo( allMembers );
       }, this);
-
-      attractor.applyTo( members );
+      // Update the member attractor of the group
+      attractor.applyTo( siblingMembers );
+      containment.applyTo( siblingMembers );
     }
 
     return function( parent ) {
@@ -39,7 +43,8 @@
         disconnect: function( world ) {
           // Remove member behaviors
           memberBehaviors.map( function( item, index, arr ) {
-            world.removeBehavior( item );
+            var behavior = display.findBehaviorById( 'member:' + item.id );
+            world.removeBehavior( behavior );
           }, this);
           // Unsubscribe from events
           world.off('display:member:added', applyMemberBehavior, this);

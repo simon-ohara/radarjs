@@ -127,10 +127,6 @@ describe("GroupBehavior", function() {
       it("names the member containment by suffixing the id", function() {
         expect( memberContainers[0].options.id ).toBe('member:containment:'+DATA.foo.group);
       });
-
-      it("applies the containment behavior to nothing", function() {
-        expect( memberContainers[0].getTargets().length ).toBe( 0 );
-      });
     });
   });
 });

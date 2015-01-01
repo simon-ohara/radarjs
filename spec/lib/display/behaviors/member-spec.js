@@ -44,6 +44,8 @@ describe("MemberBehavior", function() {
       });
 
       it("applies all behaviors to each new member", function() {
+        var allMembers;
+
         function expectNumBehaviorTargetsToBe( num ) {
           for( var b=0; b<numBehaviors; b++) {
             // Only look at the behaviors where the id is prefixed with 'member:'
@@ -55,16 +57,19 @@ describe("MemberBehavior", function() {
 
         // Add a new mwmber to the display
         store.update( DATA.foo.members[0] );
-        expectNumBehaviorTargetsToBe( 1 );
+        allMembers = display.findAll('member');
+        expectNumBehaviorTargetsToBe( allMembers.length );
 
         // Add another new member to the display
         store.update( DATA.foo.members[1] );
-        expectNumBehaviorTargetsToBe( 2 );
+        allMembers = display.findAll('member');
+        expectNumBehaviorTargetsToBe( allMembers.length );
       });
 
       it("applies the members' group member attractor to the new member", function() {
         var newMember, groupId, attractor, attractorTargets;
 
+        store.update( DATA.bar.members[0] );
         newMember = store.update( DATA.foo.members[0] );
         groupId = newMember.group;
         attractor = display.findBehaviorById('member:attractor:' + groupId);
@@ -72,6 +77,19 @@ describe("MemberBehavior", function() {
 
         expect( attractorTargets.length ).toEqual( 1 );
         expect( attractorTargets[0] ).toBe( newMember.body );
+      });
+
+      it("applies the members' group containment to the new member", function() {
+        var newMember, groupId, containment, containmentTargets;
+
+        store.update( DATA.bar.members[0] );
+        newMember = store.update( DATA.foo.members[0] );
+        groupId = newMember.group;
+        containment = display.findBehaviorById('member:containment:' + groupId);
+        containmentTargets = containment.getTargets();
+
+        expect( containmentTargets.length ).toEqual( 1 );
+        expect( containmentTargets[0] ).toBe( newMember.body );
       });
     });
   });

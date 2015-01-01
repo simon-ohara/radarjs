@@ -21,6 +21,9 @@
   function behaviorMethods() {
     var display = this;
 
+    // Set the position of the global attractor
+    attractors.global.position( display.screen.center );
+
     function applyGroupBehavior( group ) {
       updateGroupBehaviors();
       addGroupMemberAttractor( group.body );
@@ -53,9 +56,11 @@
     }
 
     function addGroupMemberContainment( groupBody ) {
-      var groupBounds, groupEdgeCollision;
+      var groupBounds, groupEdgeCollision, diameter;
 
-      groupBounds = physics.aabb(groupBody.radius * 2, groupBody.radius * 2, groupBody.state.pos),
+      diameter = groupBody.radius * 2;
+
+      groupBounds = physics.aabb(diameter, diameter, groupBody.state.pos),
 
       groupEdgeCollision = physics.behavior('edge-collision-detection', {
         aabb: groupBounds,
