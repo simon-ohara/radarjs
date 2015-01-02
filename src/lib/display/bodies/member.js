@@ -2,8 +2,6 @@
   var BaseBody = _root.display.bodies.base,
 
   options = {
-    x: 0,
-    y: 0,
     radius: 5,
     mass: 100,
     styles: {

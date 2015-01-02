@@ -37,6 +37,14 @@ describe("MemberController", function() {
       expect( display.findOne({ id: memberData.member, entity: 'member' }) ).not.toBeFalsy();
     });
 
+    it("sets the member body position to that of its group body parent", function() {
+      group = store.get( data.group );
+      member = subject.create( memberData.member, data.group );
+
+      expect( member.body.state.pos.x ).toEqual( group.body.state.pos.x - (group.body.radius / 2) );
+      expect( member.body.state.pos.y ).toEqual( group.body.state.pos.y - (group.body.radius / 2) );
+    });
+
     it("stores a reference of the group on the body", function() {
       subject.create( memberData.member, data.group );
 

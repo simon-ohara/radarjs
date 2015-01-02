@@ -328,8 +328,6 @@
   var BaseBody = _root.display.bodies.base,
 
   options = {
-    x: 0,
-    y: 0,
     radius: 5,
     mass: 100,
     styles: {
@@ -516,15 +514,30 @@
       return body; 
     }
 
+    function setBodyPosition( member, group ) {
+      var position, offset;
+
+      position = group.state.pos;
+      offset = group.radius / 2;
+      member.state.pos.x = position.x - offset;
+      member.state.pos.y = position.y - offset;
+    }
+
     return {
 
       create: function( memberId, groupId ) {
-        var newMember = new Member( memberId, groupId );
+        var newMember, memberGroup;
+
+        memberGroup = store.groups[ groupId ]; 
+
+        newMember = new Member( memberId, groupId );
         newMember.body = addBody( memberId );
         newMember.body.group = groupId;
 
+        setBodyPosition( newMember.body, memberGroup.body );
+
         store.members[ memberId ] = newMember;
-        store.groups[ groupId ].members.push( memberId );
+        memberGroup.members.push( memberId );
         display.emit( 'display:member:added', newMember );
 
         return newMember;
